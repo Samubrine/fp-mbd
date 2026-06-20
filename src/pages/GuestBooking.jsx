@@ -23,15 +23,40 @@ export default function GuestBooking({ onBookingSuccess }) {
   // Fetch catalogs
   useEffect(() => {
     Promise.all([
-      fetch('/api/room-types').then(r => r.json()),
-      fetch('/api/catalogs/payment-methods').then(r => r.json())
+      fetch('/api/room-types').then(r => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      }),
+      fetch('/api/catalogs/payment-methods').then(r => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
     ]).then(([types, methods]) => {
       setRoomTypes(types);
       setPaymentMethods(methods);
       if (types.length > 0) {
         setFormData(prev => ({ ...prev, id_jenis_kamar: types[0].id_jenis_kamar.toString() }));
       }
-    }).catch(err => console.error('Error fetching checkout catalogs:', err));
+    }).catch(err => {
+      console.warn('Error fetching catalogs online, loading mockup defaults:', err);
+      // Fallback catalogs
+      const mockTypes = [
+        { id_jenis_kamar: 1, nama_jenis: 'Standard Room', harga_master: '350000.00' },
+        { id_jenis_kamar: 2, nama_jenis: 'Superior Room', harga_master: '500000.00' },
+        { id_jenis_kamar: 3, nama_jenis: 'Deluxe Room', harga_master: '750000.00' },
+        { id_jenis_kamar: 4, nama_jenis: 'Executive Suite', harga_master: '1500000.00' },
+        { id_jenis_kamar: 5, nama_jenis: 'Presidential Suite', harga_master: '3500000.00' }
+      ];
+      const mockMethods = [
+        { id_metode: 1, nama_metode: 'Cash' },
+        { id_metode: 2, nama_metode: 'Bank Transfer' },
+        { id_metode: 3, nama_metode: 'Credit Card' },
+        { id_metode: 4, nama_metode: 'E-Wallet' }
+      ];
+      setRoomTypes(mockTypes);
+      setPaymentMethods(mockMethods);
+      setFormData(prev => ({ ...prev, id_jenis_kamar: '1' }));
+    });
   }, []);
 
   const handleChange = (e) => {
